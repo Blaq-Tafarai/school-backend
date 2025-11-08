@@ -39,6 +39,15 @@ class TeacherController extends Controller
     {
         $teacher = Auth::user()->teacher;
         $assignments = Assignment::where('teacher_id', $teacher->id)->with('classroom')->get();
+
+        // Check for overdue assignments
+        foreach ($assignments as $assignment) {
+            if ($assignment->status === 'pending' && $assignment->due_date < now()) {
+                $assignment->status = 'overdue';
+                $assignment->save();
+            }
+        }
+
         return response()->json($assignments);
     }
 
@@ -48,6 +57,7 @@ class TeacherController extends Controller
             'subject' => 'required|string',
             'name' => 'required|string',
             'due_date' => 'required|date',
+            'score' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $teacher = Teacher::where('teacher_id', Auth::user()->user_id)->first();
@@ -66,6 +76,8 @@ class TeacherController extends Controller
             'due_date' => $request->due_date,
             'classroom_id' => $teacher->classroom_id,
             'teacher_id' => $teacher->id,
+            'score' => $request->score,
+            'status' => $request->score ? 'submitted' : 'pending',
         ]);
 
         return response()->json($assignment);
@@ -74,7 +86,16 @@ class TeacherController extends Controller
     public function updateAssignment(Request $request, $id)
     {
         $assignment = Assignment::where('teacher_id', Auth::user()->teacher->id)->findOrFail($id);
+
+        $originalScore = $assignment->score;
         $assignment->update($request->all());
+
+        // If score was null and now provided, set status to submitted
+        if (is_null($originalScore) && !is_null($assignment->score)) {
+            $assignment->status = 'submitted';
+            $assignment->save();
+        }
+
         return response()->json($assignment);
     }
 

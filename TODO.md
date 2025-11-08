@@ -1,36 +1,11 @@
-# TODO: Add Image to Blog, Admin Resources, and Announcements
+# TODO: Add Score and Status to Assignments
 
-## 1. Add Image to Blogs
-- [x] Create migration to add 'image' column to blogs table
-- [x] Update Blog model to include 'image' in fillable
+## Steps to Complete
 
-## 2. Modify Resources for Admin Creation
-- [x] Create migration to add 'admin_id' to resources table and make 'teacher_id' nullable
-- [x] Update Resource model to include 'admin_id' in fillable, add relation to User, make teacher_id nullable
-
-## 3. Create Announcements Feature
-- [x] Create migration for announcements table (id, title, body, date, user_id, timestamps)
-- [x] Create Announcement model with fillable ['title', 'body', 'date', 'user_id'], casts for date, relation to User
-
-## 4. Update AdminController
-- [x] Add createResource method for admins
-- [x] Add getResources method (public access)
-- [x] Add createAnnouncement method
-- [x] Add getAnnouncements method (public access)
-- [x] Add updateAnnouncement method
-- [x] Add deleteAnnouncement method
-
-## 5. Update Routes
-- [x] Add admin routes for resources (create, update, delete)
-- [x] Add public routes for resources (get)
-- [x] Add admin routes for announcements (create, update, delete)
-- [x] Add public routes for announcements (get)
-
-## 6. Run Migrations
-- [x] Execute php artisan migrate
-
-## 7. Test Endpoints
-- [x] Test blog creation with image
-- [x] Test admin resource creation
-- [x] Test public resource access
-- [x] Test announcement creation and public access
+- [x] Create a new migration to add `score` (nullable decimal) and `status` (enum: pending, submitted, overdue; default 'pending') to the assignments table.
+- [x] Update the Assignment model: add 'score' and 'status' to fillable array; add casts for 'score' as decimal and 'status' as string.
+- [x] Modify createAssignment in TeacherController: make 'score' optional in validation; set status to 'pending' if score is null.
+- [x] Modify updateAssignment in TeacherController: if score is added (was null, now provided), set status to 'submitted'.
+- [x] Modify getAssignments in TeacherController: before returning assignments, check each for overdue (due_date < now and status == 'pending'), update to 'overdue'.
+- [x] Run the migration to apply database changes.
+- [ ] Test the functionality: create assignment without score (status pending), update to add score (status submitted), check overdue logic.

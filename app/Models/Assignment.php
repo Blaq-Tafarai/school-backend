@@ -13,10 +13,14 @@ class Assignment extends Model
         'due_date',
         'classroom_id',
         'teacher_id',
+        'score',
+        'status',
     ];
 
     protected $casts = [
         'due_date' => 'date',
+        'score' => 'decimal:2',
+        'status' => 'string',
     ];
 
     public function classroom(): BelongsTo
