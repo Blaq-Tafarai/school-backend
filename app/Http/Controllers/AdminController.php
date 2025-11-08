@@ -12,6 +12,8 @@ use App\Models\Blog;
 use App\Models\Gallery;
 use App\Models\Contact;
 use App\Models\Admission;
+use App\Models\Announcement;
+use App\Models\Resource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -252,6 +254,7 @@ class AdminController extends Controller
             'body' => 'required|string',
             'date' => 'required|date',
             'category' => 'required|string',
+            'image' => 'nullable|string',
         ]);
 
         $blog = Blog::create($request->all());
@@ -365,5 +368,98 @@ class AdminController extends Controller
 
         $admission = Admission::create($request->all());
         return response()->json($admission, 201);
+    }
+
+    // Resources Management
+    public function getResources()
+    {
+        $resources = Resource::with(['classroom', 'teacher', 'admin'])->get();
+        $flattenedResources = $resources->map(function ($resource) {
+            return [
+                'id' => $resource->id,
+                'name' => $resource->name,
+                'type' => $resource->type,
+                'file_path' => $resource->file_path,
+                'classroom_name' => $resource->classroom ? $resource->classroom->name : '',
+                'teacher_name' => $resource->teacher ? $resource->teacher->first_name . ' ' . $resource->teacher->last_name : '',
+                'admin_name' => $resource->admin ? $resource->admin->name : '',
+                'created_at' => $resource->created_at ? $resource->created_at->toISOString() : '',
+                'updated_at' => $resource->updated_at ? $resource->updated_at->toISOString() : '',
+            ];
+        });
+        return response()->json(['data' => $flattenedResources]);
+    }
+
+    public function createResource(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'type' => 'required|in:pdf,word,excel,ppt,image,video,other',
+            'file_path' => 'required|string',
+            'classroom_id' => 'nullable|exists:classrooms,id',
+        ]);
+
+        $resource = Resource::create([
+            'name' => $request->name,
+            'type' => $request->type,
+            'file_path' => $request->file_path,
+            'classroom_id' => $request->classroom_id,
+            'admin_id' => auth()->id(),
+        ]);
+
+        return response()->json($resource->load(['classroom', 'admin']), 201);
+    }
+
+    public function updateResource(Request $request, $id)
+    {
+        $resource = Resource::findOrFail($id);
+        $resource->update($request->all());
+        return response()->json($resource->load(['classroom', 'teacher', 'admin']));
+    }
+
+    public function deleteResource($id)
+    {
+        $resource = Resource::findOrFail($id);
+        $resource->delete();
+        return response()->json(['message' => 'Resource deleted successfully']);
+    }
+
+    // Announcements Management
+    public function getAnnouncements()
+    {
+        $announcements = Announcement::with('user')->get();
+        return response()->json($announcements);
+    }
+
+    public function createAnnouncement(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'body' => 'nullable|string',
+            'date' => 'required|date',
+        ]);
+
+        $announcement = Announcement::create([
+            'title' => $request->title,
+            'body' => $request->body,
+            'date' => $request->date,
+            'user_id' => auth()->id(),
+        ]);
+
+        return response()->json($announcement->load('user'), 201);
+    }
+
+    public function updateAnnouncement(Request $request, $id)
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->update($request->all());
+        return response()->json($announcement->load('user'));
+    }
+
+    public function deleteAnnouncement($id)
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->delete();
+        return response()->json(['message' => 'Announcement deleted successfully']);
     }
 }

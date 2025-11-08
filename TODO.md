@@ -1,10 +1,36 @@
-# TODO: Fix Event Creation and Retrieval Issues
+# TODO: Add Image to Blog, Admin Resources, and Announcements
 
-## Tasks
-- [x] Update getEvents() in AdminController to use pagination (e.g., Event::paginate(10)) to limit response size and prevent "Response body is too large" error.
-- [x] Add try-catch block in createEvent() method to handle exceptions and return meaningful error messages for 500 Internal Server Error.
-- [x] Add 'time' to casts in Event model for proper handling of time field.
+## 1. Add Image to Blogs
+- [x] Create migration to add 'image' column to blogs table
+- [x] Update Blog model to include 'image' in fillable
 
-## Followup Steps
-- [ ] Test the create event endpoint to ensure no 500 errors occur.
-- [ ] Test get events endpoint to confirm pagination works and response is manageable.
+## 2. Modify Resources for Admin Creation
+- [x] Create migration to add 'admin_id' to resources table and make 'teacher_id' nullable
+- [x] Update Resource model to include 'admin_id' in fillable, add relation to User, make teacher_id nullable
+
+## 3. Create Announcements Feature
+- [x] Create migration for announcements table (id, title, body, date, user_id, timestamps)
+- [x] Create Announcement model with fillable ['title', 'body', 'date', 'user_id'], casts for date, relation to User
+
+## 4. Update AdminController
+- [x] Add createResource method for admins
+- [x] Add getResources method (public access)
+- [x] Add createAnnouncement method
+- [x] Add getAnnouncements method (public access)
+- [x] Add updateAnnouncement method
+- [x] Add deleteAnnouncement method
+
+## 5. Update Routes
+- [x] Add admin routes for resources (create, update, delete)
+- [x] Add public routes for resources (get)
+- [x] Add admin routes for announcements (create, update, delete)
+- [x] Add public routes for announcements (get)
+
+## 6. Run Migrations
+- [x] Execute php artisan migrate
+
+## 7. Test Endpoints
+- [x] Test blog creation with image
+- [x] Test admin resource creation
+- [x] Test public resource access
+- [x] Test announcement creation and public access

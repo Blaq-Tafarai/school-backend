@@ -46,6 +46,18 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::put('/admin/blogs/{id}', [AdminController::class, 'updateBlog']);
     Route::delete('/admin/blogs/{id}', [AdminController::class, 'deleteBlog']);
 
+    // Resources Management
+    Route::get('/admin/resources', [AdminController::class, 'getResources']);
+    Route::post('/admin/resources', [AdminController::class, 'createResource']);
+    Route::put('/admin/resources/{id}', [AdminController::class, 'updateResource']);
+    Route::delete('/admin/resources/{id}', [AdminController::class, 'deleteResource']);
+
+    // Announcements Management
+    Route::get('/admin/announcements', [AdminController::class, 'getAnnouncements']);
+    Route::post('/admin/announcements', [AdminController::class, 'createAnnouncement']);
+    Route::put('/admin/announcements/{id}', [AdminController::class, 'updateAnnouncement']);
+    Route::delete('/admin/announcements/{id}', [AdminController::class, 'deleteAnnouncement']);
+
     // Gallery Management
     Route::get('/admin/gallery', [AdminController::class, 'getGallery']);
     Route::post('/admin/gallery', [AdminController::class, 'createGallery']);
@@ -103,3 +115,5 @@ Route::post('/admission', [AdminController::class, 'createAdmission']);
 Route::get('/events', [AdminController::class, 'getEvents']);
 Route::get('/blogs', [AdminController::class, 'getBlogs']);
 Route::get('/gallery', [AdminController::class, 'getGallery']);
+Route::get('/resources', [AdminController::class, 'getResources']);
+Route::get('/announcements', [AdminController::class, 'getAnnouncements']);

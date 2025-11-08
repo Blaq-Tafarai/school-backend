@@ -13,6 +13,7 @@ class Resource extends Model
         'file_path',
         'classroom_id',
         'teacher_id',
+        'admin_id',
     ];
 
     public function classroom(): BelongsTo
@@ -23,5 +24,10 @@ class Resource extends Model
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class);
+    }
+
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admin_id');
     }
 }

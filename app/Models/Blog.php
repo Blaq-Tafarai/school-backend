@@ -12,6 +12,7 @@ class Blog extends Model
         'body',
         'date',
         'category',
+        'image',
     ];
 
     protected $casts = [
