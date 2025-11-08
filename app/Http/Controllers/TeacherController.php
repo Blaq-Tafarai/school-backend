@@ -186,6 +186,7 @@ class TeacherController extends Controller
             'student_id' => 'required|exists:students,id',
             'date' => 'required|date',
             'status' => 'required|in:present,absent,late',
+            'remark' => 'nullable|string',
         ]);
 
         $teacher = Auth::user()->teacher;
@@ -204,6 +205,7 @@ class TeacherController extends Controller
             [
                 'status' => $request->status,
                 'teacher_id' => $teacher->id,
+                'remark' => $request->remark,
             ]
         );
 
