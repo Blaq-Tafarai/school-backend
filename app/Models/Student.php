@@ -20,6 +20,13 @@ class Student extends Model
         'address',
         'student_id',
         'user_id',
+        'position_in_class',
+        'next_term_reopens',
+        'interest',
+        'conduct',
+        'attitude',
+        'class_teacher_remark',
+        'academic_remark',
     ];
 
     public function user(): BelongsTo

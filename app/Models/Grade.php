@@ -9,12 +9,13 @@ class Grade extends Model
 {
     protected $fillable = [
         'subject',
-        'first_test',
-        'second_test',
-        'ca',
-        'grade',
-        'position',
-        'remark',
+        'class_score',
+        'exam_score',
+        'total_score',
+        'grade_meaning',
+        'subj_pos_class',
+        'subj_pos_form',
+        'teacher_mod_p',
         'student_id',
         'teacher_id',
     ];

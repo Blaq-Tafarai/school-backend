@@ -118,13 +118,21 @@ class TeacherController extends Controller
     {
         $request->validate([
             'student_id' => 'required|exists:students,id',
-            'subject' => 'required|string',
-            'first_test' => 'required|numeric|min:0|max:100',
-            'second_test' => 'required|numeric|min:0|max:100',
-            'ca' => 'required|numeric|min:0|max:100',
-            'grade' => 'required|string',
-            'position' => 'required|string',
-            'remark' => 'required|string',
+            'subjects' => 'required|array',
+            'subjects.*.subject' => 'required|string',
+            'subjects.*.class_score' => 'required|numeric|min:0|max:50',
+            'subjects.*.exam_score' => 'required|numeric|min:0|max:50',
+            'subjects.*.grade_meaning' => 'required|string',
+            'subjects.*.subj_pos_class' => 'required|string',
+            'subjects.*.subj_pos_form' => 'required|string',
+            'subjects.*.teacher_mod_p' => 'required|string',
+            'position_in_class' => 'required|string',
+            'next_term_reopens' => 'required|date',
+            'interest' => 'required|string',
+            'conduct' => 'required|string',
+            'attitude' => 'required|string',
+            'class_teacher_remark' => 'required|string',
+            'academic_remark' => 'required|string',
         ]);
 
         $teacher = Auth::user()->teacher;
@@ -143,19 +151,84 @@ class TeacherController extends Controller
             return response()->json(['error' => 'Student not in your classroom'], 403);
         }
 
-        $grade = Grade::create([
-            'student_id' => $request->student_id,
-            'teacher_id' => $teacher->id,
-            'subject' => $request->subject,
-            'first_test' => $request->first_test,
-            'second_test' => $request->second_test,
-            'ca' => $request->ca,
-            'grade' => $request->grade,
-            'position' => $request->position,
-            'remark' => $request->remark,
+        // Update student with per-student fields
+        $student->update([
+            'position_in_class' => $request->position_in_class,
+            'next_term_reopens' => $request->next_term_reopens,
+            'interest' => $request->interest,
+            'conduct' => $request->conduct,
+            'attitude' => $request->attitude,
+            'class_teacher_remark' => $request->class_teacher_remark,
+            'academic_remark' => $request->academic_remark,
         ]);
 
-        return response()->json($grade);
+        // Create grade records for each subject
+        $grades = [];
+        foreach ($request->subjects as $subjectData) {
+            $totalScore = $subjectData['class_score'] + $subjectData['exam_score'];
+            $grade = Grade::create([
+                'student_id' => $request->student_id,
+                'teacher_id' => $teacher->id,
+                'subject' => $subjectData['subject'],
+                'class_score' => $subjectData['class_score'],
+                'exam_score' => $subjectData['exam_score'],
+                'total_score' => $totalScore,
+                'grade_meaning' => $subjectData['grade_meaning'],
+                'subj_pos_class' => $subjectData['subj_pos_class'],
+                'subj_pos_form' => $subjectData['subj_pos_form'],
+                'teacher_mod_p' => $subjectData['teacher_mod_p'],
+            ]);
+            $grades[] = $grade;
+        }
+
+        // Generate formatted report
+        $report = "POSITION IN CLASS: {$student->position_in_class}\n\n";
+        $report .= "NEXT TERM RE-OPENS: " . \Carbon\Carbon::parse($student->next_term_reopens)->format('jS F, Y') . "\n\n";
+
+        // Define column widths
+        $colWidths = [
+            'subject' => 20,
+            'class_score' => 17,
+            'exam_score' => 17,
+            'total_score' => 19,
+            'grade_meaning' => 13,
+            'subj_pos_class' => 17,
+            'subj_pos_form' => 15,
+            'teacher_mod_p' => 14,
+        ];
+
+        // Header
+        $report .= str_pad('SUBJECTS', $colWidths['subject']) .
+                   str_pad('CLASS SCORE (50%)', $colWidths['class_score']) .
+                   str_pad('EXAM SCORE (50%)', $colWidths['exam_score']) .
+                   str_pad('TOTAL SCORE (100%)', $colWidths['total_score']) .
+                   str_pad('GRADE MEANING', $colWidths['grade_meaning']) .
+                   str_pad('SUBJ. POS. CLASS', $colWidths['subj_pos_class']) .
+                   str_pad('SUBJ. POS. FORM', $colWidths['subj_pos_form']) .
+                   "TEACHER MOD.P.\n";
+
+        // Separator line
+        $report .= str_repeat('-', array_sum($colWidths)) . "\n";
+
+        // Grade rows
+        foreach ($grades as $grade) {
+            $report .= str_pad($grade->subject, $colWidths['subject']) .
+                       str_pad($grade->class_score, $colWidths['class_score']) .
+                       str_pad($grade->exam_score, $colWidths['exam_score']) .
+                       str_pad($grade->total_score, $colWidths['total_score']) .
+                       str_pad($grade->grade_meaning, $colWidths['grade_meaning']) .
+                       str_pad($grade->subj_pos_class, $colWidths['subj_pos_class']) .
+                       str_pad($grade->subj_pos_form, $colWidths['subj_pos_form']) .
+                       $grade->teacher_mod_p . "\n";
+        }
+
+        $report .= "\nINTEREST: {$student->interest}\n";
+        $report .= "CONDUCT: {$student->conduct}\n";
+        $report .= "ATTITUDE: {$student->attitude}\n";
+        $report .= "\nCLASS TEACHER'S REMARK: {$student->class_teacher_remark}\n\n";
+        $report .= "ACADEMIC REMARK: {$student->academic_remark}\n";
+
+        return response()->json(['report' => $report, 'grades' => $grades]);
     }
 
     public function updateGrade(Request $request, $id)
