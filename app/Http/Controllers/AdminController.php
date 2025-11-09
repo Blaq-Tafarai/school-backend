@@ -14,6 +14,7 @@ use App\Models\Contact;
 use App\Models\Admission;
 use App\Models\Announcement;
 use App\Models\Resource;
+use App\Models\Schedule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -461,5 +462,87 @@ class AdminController extends Controller
         $announcement = Announcement::findOrFail($id);
         $announcement->delete();
         return response()->json(['message' => 'Announcement deleted successfully']);
+    }
+
+    // Schedules Management
+    public function getSchedules(Request $request)
+    {
+        $query = Schedule::with('classroom');
+
+        if ($request->has('classroom_id')) {
+            $query->where('classroom_id', $request->classroom_id);
+        }
+
+        $schedules = $query->get();
+        return response()->json($schedules);
+    }
+
+    public function createSchedule(Request $request)
+    {
+        // Check if it's bulk schedules with common classroom_id and day
+        if ($request->has('schedules') && is_array($request->schedules)) {
+            $request->validate([
+                'classroom_id' => 'required|exists:classrooms,id',
+                'day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday',
+                'schedules' => 'required|array',
+                'schedules.*.period' => 'required|string',
+                'schedules.*.time' => 'required|string',
+                'schedules.*.course' => 'required|string',
+                'schedules.*.room' => 'required|string',
+                'schedules.*.teacher' => 'required|string',
+            ]);
+
+            $schedules = [];
+            foreach ($request->schedules as $scheduleData) {
+                $scheduleData['classroom_id'] = $request->classroom_id;
+                $scheduleData['day'] = $request->day;
+                $schedules[] = Schedule::create($scheduleData);
+            }
+            return response()->json(Schedule::with('classroom')->findMany(collect($schedules)->pluck('id')), 201);
+        } elseif (is_array($request->all()) && isset($request->all()[0])) {
+            // Array of full schedules
+            $schedules = [];
+            foreach ($request->all() as $scheduleData) {
+                $validated = validator($scheduleData, [
+                    'classroom_id' => 'required|exists:classrooms,id',
+                    'day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday',
+                    'period' => 'required|string',
+                    'time' => 'required|string',
+                    'course' => 'required|string',
+                    'room' => 'required|string',
+                    'teacher' => 'required|string',
+                ])->validate();
+
+                $schedules[] = Schedule::create($validated);
+            }
+            return response()->json(Schedule::with('classroom')->findMany(collect($schedules)->pluck('id')), 201);
+        } else {
+            // Single schedule
+            $request->validate([
+                'classroom_id' => 'required|exists:classrooms,id',
+                'day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday',
+                'period' => 'required|string',
+                'time' => 'required|string',
+                'course' => 'required|string',
+                'room' => 'required|string',
+                'teacher' => 'required|string',
+            ]);
+
+            $schedule = Schedule::create($request->all());
+            return response()->json($schedule->load('classroom'), 201);
+        }
+    }
+
+    public function getSchedulesByClassroom($classroom_id)
+    {
+        $schedules = Schedule::where('classroom_id', $classroom_id)
+            ->orderByRaw("FIELD(day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')")
+            ->orderBy('period')
+            ->get();
+
+        // Group schedules by day
+        $groupedSchedules = $schedules->groupBy('day');
+
+        return response()->json($groupedSchedules);
     }
 }

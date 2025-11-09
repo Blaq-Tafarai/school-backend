@@ -58,6 +58,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::put('/admin/announcements/{id}', [AdminController::class, 'updateAnnouncement']);
     Route::delete('/admin/announcements/{id}', [AdminController::class, 'deleteAnnouncement']);
 
+    // Schedules Management
+    Route::get('/admin/schedules', [AdminController::class, 'getSchedules']);
+    Route::post('/admin/schedules', [AdminController::class, 'createSchedule']);
+    Route::get('/admin/schedules/classroom/{classroom_id}', [AdminController::class, 'getSchedulesByClassroom']);
+
     // Gallery Management
     Route::get('/admin/gallery', [AdminController::class, 'getGallery']);
     Route::post('/admin/gallery', [AdminController::class, 'createGallery']);
