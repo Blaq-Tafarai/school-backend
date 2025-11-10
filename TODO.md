@@ -1,9 +1,0 @@
-- [x] Create migration for schedules table
-- [x] Create Schedule model
-- [x] Create ScheduleSeeder with sample data
-- [x] Update DatabaseSeeder to include ScheduleSeeder
-- [x] Add getSchedules method to AdminController
-- [x] Add schedules route in api.php
-- [x] Run migration
-- [x] Run seeder
-- [ ] Test the API endpoint to verify schedules are returned correctly
